@@ -5,6 +5,7 @@ const passport = require('./config/ppConfig')
 const session = require('express-session')
 const flash = require('connect-flash')
 const router = require('./config/routes')
+const cors = require('cors')
 const app = express()
 const dotenv = require('dotenv')
 dotenv.load()
@@ -14,6 +15,8 @@ app.set('view engine', 'ejs')
 
 // Mounting middleware
 app.use(require('morgan')('dev'))
+app.use(cors())
+app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(ejsLayouts)
 
@@ -30,10 +33,20 @@ app.use(function (req, res, next) {
   res.locals.alerts = req.flash()
   next()
 })
+app.use(express.static('public'))
 
 // wiring up the router
-app.get('/', router)
+app.use('/', router)
 
-app.listen(process.env.PORT || 3000, function() {
-  console.log("your server's running at PORT 3000");
+// error handling
+app.use((err, req, res, next) => {
+  res.status(err.status || 500)
+  res.json({
+    message: err.message,
+    error: err
+  })
+})
+
+app.listen(process.env.PORT || 3000, function () {
+  console.log('listening on port 3000')
 })
